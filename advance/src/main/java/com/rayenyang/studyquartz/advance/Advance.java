@@ -1,0 +1,66 @@
+package com.rayenyang.studyquartz.advance;
+
+import org.quartz.*;
+import org.quartz.impl.StdSchedulerFactory;
+
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * @author yangruiheng
+ *         Date:    2018/7/9
+ */
+public class Advance {
+	static Scheduler scheduler;
+	static {
+		try {
+			scheduler = StdSchedulerFactory.getDefaultScheduler();
+			scheduler.start();
+		} catch (SchedulerException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static void main(String[] args) throws SchedulerException, InterruptedException {
+		start();
+		TimeUnit.SECONDS.sleep(10);
+		replaceJob();
+		TimeUnit.SECONDS.sleep(10);
+		replaceJob2();
+	}
+	
+	public static void start() throws SchedulerException {
+		JobBuilder jobBuilder = JobBuilder.newJob(JobDataJobTest.class)
+				.withIdentity("job1", "group1")
+				.usingJobData("data1", "I am data1")
+				.usingJobData("data2", 2);
+		SimpleTrigger trigger = TriggerBuilder.newTrigger().startNow()
+				.withIdentity("trigger1", "trigger-group1")
+				.withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(2).repeatForever()).build();
+		scheduler.scheduleJob(jobBuilder.build(), trigger);
+	}
+	
+	//replace job by trigger with identity
+	public static void replaceJob() throws SchedulerException {
+		System.out.println("111111111111111111111111111");
+		SimpleTrigger trigger = TriggerBuilder.newTrigger().startNow()
+				.withIdentity("trigger1", "trigger-group1")
+				.withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(10).repeatForever()).build();
+		Date date = scheduler.rescheduleJob(TriggerKey.triggerKey("trigger1", "trigger-group1"), trigger);
+		System.out.println(date);
+	}
+	
+	public static void replaceJob2() throws SchedulerException {
+		System.out.println("222222222222222222222222222222");
+//		replace again
+//		SimpleTrigger trigger = TriggerBuilder.newTrigger().startNow()
+//				.withIdentity("trigger1", "trigger-group1")
+//				.withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(10).repeatForever()).build();
+//		*********************************************************************
+//	    replace job again, but by invalid cron trigger
+		Trigger trigger = TriggerBuilder.newTrigger().withSchedule(CronScheduleBuilder.cronSchedule("* * * * * *"))
+				.withIdentity("trigger1", "trigger-group1").build();
+		Date date = scheduler.rescheduleJob(TriggerKey.triggerKey("trigger1", "trigger-group1"), trigger);
+		System.out.println(date);
+	}
+}
