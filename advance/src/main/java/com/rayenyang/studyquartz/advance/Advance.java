@@ -1,5 +1,6 @@
 package com.rayenyang.studyquartz.advance;
 
+import org.junit.Test;
 import org.quartz.*;
 import org.quartz.impl.StdSchedulerFactory;
 
@@ -19,6 +20,17 @@ public class Advance {
 		} catch (SchedulerException e) {
 			e.printStackTrace();
 		}
+		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+			@Override
+			public void run() {
+				System.out.println("add hook");
+				try {
+					scheduler.shutdown(true);
+				} catch (SchedulerException e) {
+					e.printStackTrace();
+				}
+			}
+		}));
 	}
 	
 	public static void main(String[] args) throws SchedulerException, InterruptedException {
@@ -27,6 +39,45 @@ public class Advance {
 		replaceJob();
 		TimeUnit.SECONDS.sleep(10);
 		replaceJob2();
+	}
+	
+	/**
+	 * will not  wait for job complete
+	 */
+	@Test
+	public void testExitWithBigJob() throws Exception {
+		JobDetail job = JobBuilder.newJob(BigJob.class)
+				.withIdentity("job1", "group1")
+				.build();
+		Trigger trigger = TriggerBuilder.newTrigger().startNow()/*.withSchedule(CronScheduleBuilder.cronSchedule("02 * * * * ?"))*/.build();
+		scheduler.scheduleJob(job, trigger);
+		TimeUnit.SECONDS.sleep(5);
+		System.out.println("shutdown....");
+		//test if will wait for job complete
+		System.exit(0);
+	}
+	
+	/**
+	 * the job fired by old trigger will continue
+	 */
+	@Test
+	public void testReplaceWithBigJob() throws Exception {
+		JobDetail job = JobBuilder.newJob(BigJob.class)
+				.withIdentity("job1", "group1")
+				.build();
+		Trigger trigger = TriggerBuilder.newTrigger()
+				.withIdentity("trigger1", "triggerGroup1")
+				.startNow().build();
+		scheduler.scheduleJob(job, trigger);
+		TimeUnit.SECONDS.sleep(5);
+		System.out.println("replace trigger....");
+		Trigger newTrigger = TriggerBuilder.newTrigger().withSchedule(
+				CronScheduleBuilder.cronSchedule("* * * * * ? 2099"))
+				.withIdentity("trigger1", "triggerGroup1")
+				.build();
+		scheduler.rescheduleJob(TriggerKey.triggerKey("trigger1", "triggerGroup1"), newTrigger);
+		//block
+		TimeUnit.SECONDS.sleep(60);
 	}
 	
 	public static void start() throws SchedulerException {
