@@ -5,7 +5,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
 /**
- * @author yangruiheng
+ * @author rayenyang
  *         Date:    2018/7/9
  */
 public class JobDataJobTest implements Job {

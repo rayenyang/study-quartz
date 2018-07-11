@@ -7,7 +7,7 @@ import org.quartz.JobExecutionException;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author yangruiheng
+ * @author rayenyang
  *         Date:    2018/7/11
  */
 public class BigJob implements Job {

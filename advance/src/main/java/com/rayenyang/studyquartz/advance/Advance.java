@@ -8,7 +8,7 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author yangruiheng
+ * @author rayenyang
  *         Date:    2018/7/9
  */
 public class Advance {
